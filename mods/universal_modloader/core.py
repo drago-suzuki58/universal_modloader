@@ -6,40 +6,96 @@ from typing import Any, Dict
 from .decorator import REGISTRY
 
 
+class VariableCollector(ast.NodeVisitor):
+    def __init__(self):
+        self.vars = set()
+
+    def visit_arg(self, node):
+        self.vars.add(node.arg)
+
+    def visit_Name(self, node):
+        if isinstance(node.ctx, ast.Store):
+            self.vars.add(node.id)
+
+    def collect(self, node):
+        self.vars.clear()
+        if hasattr(node, "args"):
+            for arg in node.args.args:
+                self.visit_arg(arg)
+        self.generic_visit(node)
+        return self.vars
+
+
+class HookGenerator:
+    @staticmethod
+    def create_hook_block(target_module, selector, at_type, available_vars):
+        template = f"""
+_uml_ctx = locals()
+universal_modloader.core.execute_hooks('{target_module}', '{selector}', '{at_type}', _uml_ctx)
+"""
+        for var_name in available_vars:
+            if var_name == "__return__":
+                continue
+
+            template += (
+                f"if '{var_name}' in _uml_ctx: {var_name} = _uml_ctx['{var_name}']\n"
+            )
+
+        return ast.parse(template).body
+
+    @staticmethod
+    def create_return_block(target_module, selector, original_return_node):
+        ret_val_node = (
+            original_return_node.value
+            if original_return_node.value
+            else ast.Constant(value=None)
+        )
+
+        template = f"""
+_uml_ctx = locals()
+_uml_ctx['__return__'] = None
+universal_modloader.core.execute_hooks('{target_module}', '{selector}', 'RETURN', _uml_ctx)
+return _uml_ctx['__return__']
+"""
+        nodes = ast.parse(template).body
+
+        nodes[1].value = ret_val_node
+
+        return nodes
+
+
+class ReturnReplacer(ast.NodeTransformer):
+    def __init__(self, target_module, selector):
+        self.target_module = target_module
+        self.selector = selector
+
+    def visit_Return(self, node):
+        new_nodes = HookGenerator.create_return_block(
+            self.target_module, self.selector, node
+        )
+
+        for n in new_nodes:
+            ast.copy_location(n, node)
+        return new_nodes
+
+    def visit_FunctionDef(self, node):
+        return node
+
+    def visit_AsyncFunctionDef(self, node):
+        return node
+
+
 class InjectionTransformer(ast.NodeTransformer):
     def __init__(self, target_module_name):
         self.target_module_name = target_module_name
         self.patches = REGISTRY.get(target_module_name, [])
         self.scope_stack = []
+        self.var_collector = VariableCollector()
 
     def _get_current_selector(self, node_name):
         if self.scope_stack:
             return ".".join(self.scope_stack + [node_name])
         return node_name
-
-    def _create_hook_call(self, selector, at_type_name):
-        return ast.Expr(
-            value=ast.Call(
-                func=ast.Attribute(
-                    value=ast.Attribute(
-                        value=ast.Name(id="universal_modloader", ctx=ast.Load()),
-                        attr="core",
-                        ctx=ast.Load(),
-                    ),
-                    attr="execute_hooks",
-                    ctx=ast.Load(),
-                ),
-                args=[
-                    ast.Constant(value=self.target_module_name),
-                    ast.Constant(value=selector),
-                    ast.Constant(value=at_type_name),
-                    ast.Call(
-                        func=ast.Name(id="locals", ctx=ast.Load()), args=[], keywords=[]
-                    ),
-                ],
-                keywords=[],
-            )
-        )
 
     def visit_ClassDef(self, node):
         self.scope_stack.append(node.name)
@@ -49,24 +105,46 @@ class InjectionTransformer(ast.NodeTransformer):
 
     def visit_FunctionDef(self, node):
         self.generic_visit(node)
+
         selector = self._get_current_selector(node.name)
         active_patches = [p for p in self.patches if p.selector == selector]
 
         if not active_patches:
             return node
 
+        used_vars = self.var_collector.collect(node)
+
         for patch in active_patches:
-            if patch.at.type.name == "HEAD":
-                hook_code = self._create_hook_call(selector, "HEAD")
-                node.body.insert(0, hook_code)
-                print(f"[uml] Injected HEAD into {selector}")
+            at_type = patch.at.type.name
 
-            elif patch.at.type.name == "TAIL":
-                hook_code = self._create_hook_call(selector, "TAIL")
-                node.body.append(hook_code)
-                print(f"[uml] Injected TAIL into {selector}")
+            if at_type in ["HEAD", "TAIL"]:
+                hook_block = HookGenerator.create_hook_block(
+                    self.target_module_name, selector, at_type, used_vars
+                )
 
-            # TODO: And more injection points can be added here.
+                if at_type == "HEAD":
+                    for stmt in reversed(hook_block):
+                        node.body.insert(0, stmt)
+                    print(f"[uml] Injected HEAD w/ WriteBack into {selector}")
+
+                elif at_type == "TAIL":
+                    node.body.extend(hook_block)
+                    print(f"[uml] Injected TAIL w/ WriteBack into {selector}")
+
+            elif at_type == "RETURN":
+                print(f"[uml] Rewriting RETURN in {selector}")
+                replacer = ReturnReplacer(self.target_module_name, selector)
+
+                new_body = []
+                for stmt in node.body:
+                    res = replacer.visit(stmt)
+                    if isinstance(res, list):
+                        new_body.extend(res)
+                    elif res:
+                        new_body.append(res)
+                node.body = new_body
+
+            # TODO: OTHER at_types (INVOKE, ASSIGN, FIELD)
 
         return node
 

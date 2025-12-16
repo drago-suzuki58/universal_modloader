@@ -2,6 +2,17 @@ version = 1
 revision = 3
 requires-python = ">=3.12"
 
+[manifest]
+members = [
+    "simple-cli-rpg",
+    "universal-modloader",
+]
+
+[[package]]
+name = "simple-cli-rpg"
+version = "0.1.0"
+source = { virtual = "examples/simple_cli_rpg" }
+
 [[package]]
 name = "universal-modloader"
 version = "0.1.0"

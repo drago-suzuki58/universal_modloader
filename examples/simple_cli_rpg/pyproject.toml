@@ -1,0 +1,7 @@
+[project]
+name = "simple-cli-rpg"
+version = "0.1.0"
+description = "Sample CLI RPG game using universal-modloader"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
