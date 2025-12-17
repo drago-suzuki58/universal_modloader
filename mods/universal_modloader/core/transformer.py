@@ -32,10 +32,15 @@ class MainTransformer(ast.NodeTransformer):
         self.scope_stack = []
         self.scope_analyzer = ScopeAnalyzer()
 
-    def _get_current_selector(self, node_name):
-        if self.scope_stack:
-            return ".".join(self.scope_stack + [node_name])
-        return node_name
+    def _get_full_func_name(self, node):
+        if isinstance(node, ast.Name):
+            return node.id
+        elif isinstance(node, ast.Attribute):
+            value_name = self._get_full_func_name(node.value)
+            if value_name:
+                return f"{value_name}.{node.attr}"
+            return node.attr
+        return None
 
     def visit_ClassDef(self, node):
         self.scope_stack.append(node.name)
@@ -46,31 +51,36 @@ class MainTransformer(ast.NodeTransformer):
     def visit_Call(self, node):
         self.generic_visit(node)
 
-        target_func_name = None
-        if isinstance(node.func, ast.Name):
-            target_func_name = node.func.id
-        elif isinstance(node.func, ast.Attribute):
-            target_func_name = node.func.attr
+        full_func_name = self._get_full_func_name(node.func)
 
-        if not target_func_name:
+        if not full_func_name:
             return node
 
         current_scope = ".".join(self.scope_stack)
+        target_patch = None
 
-        has_hook = False
         for patch in self.patches:
-            if patch.at.type.name == "INVOKE" and patch.at.target == target_func_name:
-                if patch.selector == "__body__" or patch.selector == current_scope:
-                    has_hook = True
-                    break
+            if patch.at.type.name != "INVOKE":
+                continue
 
-        if not has_hook:
+            if patch.selector != "__body__" and patch.selector != current_scope:
+                continue
+
+            target = patch.at.target
+
+            if full_func_name == target or full_func_name.endswith(f".{target}"):
+                target_patch = patch
+                break
+
+        if not target_patch:
             return node
+
+        invoke_key = target_patch.at.target
 
         new_args = [
             node.func,
             ast.Constant(value=self.target_module_name),
-            ast.Constant(value=target_func_name),
+            ast.Constant(value=invoke_key),
             ast.Tuple(elts=node.args, ctx=ast.Load()),
             ast.Dict(
                 keys=[ast.Constant(value=k.arg) for k in node.keywords],
