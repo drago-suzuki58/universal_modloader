@@ -39,6 +39,10 @@ def invoke_wrapper(
             ):
                 patch.hook_func(ctx)
 
+    # CHECK CANCEL
+    if ctx.get("__cancel__", False):
+        return ctx["__return__"]
+
     # EXECUTE
     try:
         result = original_func(*ctx["args"], **ctx["kwargs"])
