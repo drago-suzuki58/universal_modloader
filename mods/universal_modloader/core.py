@@ -1,7 +1,7 @@
 import ast
 import importlib.abc
 import sys
-from typing import Any, Dict
+from typing import Any, Callable, Dict
 
 from .decorator import REGISTRY
 
@@ -85,6 +85,49 @@ class ReturnReplacer(ast.NodeTransformer):
         return node
 
 
+def invoke_wrapper(
+    original_func: Callable,
+    target_module: str,
+    selector: str,
+    args: tuple,
+    kwargs: dict,
+    caller_ctx: dict,
+):
+    ctx = {
+        "args": list(args),
+        "kwargs": kwargs,
+        "caller_locals": caller_ctx,
+        "__return__": None,
+    }
+
+    if target_module in REGISTRY:
+        for patch in REGISTRY[target_module]:
+            if (
+                patch.at.type.name == "INVOKE"
+                and patch.at.target == selector
+                and patch.at.shift.name == "BEFORE"
+            ):
+                patch.hook_func(ctx)
+
+    try:
+        result = original_func(*ctx["args"], **ctx["kwargs"])
+    except Exception as e:
+        raise e
+
+    ctx["__return__"] = result
+
+    if target_module in REGISTRY:
+        for patch in REGISTRY[target_module]:
+            if (
+                patch.at.type.name == "INVOKE"
+                and patch.at.target == selector
+                and patch.at.shift.name == "AFTER"
+            ):
+                patch.hook_func(ctx)
+
+    return ctx["__return__"]
+
+
 class InjectionTransformer(ast.NodeTransformer):
     def __init__(self, target_module_name):
         self.target_module_name = target_module_name
@@ -104,47 +147,52 @@ class InjectionTransformer(ast.NodeTransformer):
         return node
 
     def visit_FunctionDef(self, node):
-        self.generic_visit(node)
+        # 1. まずスタックに自分の名前を積む (これがないと中のINVOKEが迷子になる)
+        self.scope_stack.append(node.name)
 
-        selector = self._get_current_selector(node.name)
-        active_patches = [p for p in self.patches if p.selector == selector]
+        try:
+            self.generic_visit(node)
 
-        if not active_patches:
-            return node
+            selector = ".".join(self.scope_stack)
+            active_patches = [p for p in self.patches if p.selector == selector]
 
-        used_vars = self.var_collector.collect(node)
+            if not active_patches:
+                return node
 
-        for patch in active_patches:
-            at_type = patch.at.type.name
+            used_vars = self.var_collector.collect(node)
 
-            if at_type in ["HEAD", "TAIL"]:
-                hook_block = HookGenerator.create_hook_block(
-                    self.target_module_name, selector, at_type, used_vars
-                )
+            for patch in active_patches:
+                at_type = patch.at.type.name
 
-                if at_type == "HEAD":
-                    for stmt in reversed(hook_block):
-                        node.body.insert(0, stmt)
-                    print(f"[uml] Injected HEAD w/ WriteBack into {selector}")
+                if at_type in ["HEAD", "TAIL"]:
+                    hook_block = HookGenerator.create_hook_block(
+                        self.target_module_name, selector, at_type, used_vars
+                    )
 
-                elif at_type == "TAIL":
-                    node.body.extend(hook_block)
-                    print(f"[uml] Injected TAIL w/ WriteBack into {selector}")
+                    if at_type == "HEAD":
+                        for stmt in reversed(hook_block):
+                            node.body.insert(0, stmt)
+                        print(f"[uml] Injected HEAD w/ WriteBack into {selector}")
 
-            elif at_type == "RETURN":
-                print(f"[uml] Rewriting RETURN in {selector}")
-                replacer = ReturnReplacer(self.target_module_name, selector)
+                    elif at_type == "TAIL":
+                        node.body.extend(hook_block)
+                        print(f"[uml] Injected TAIL w/ WriteBack into {selector}")
 
-                new_body = []
-                for stmt in node.body:
-                    res = replacer.visit(stmt)
-                    if isinstance(res, list):
-                        new_body.extend(res)
-                    elif res:
-                        new_body.append(res)
-                node.body = new_body
+                elif at_type == "RETURN":
+                    print(f"[uml] Rewriting RETURN in {selector}")
+                    replacer = ReturnReplacer(self.target_module_name, selector)
 
-            # TODO: OTHER at_types (INVOKE, ASSIGN, FIELD)
+                    new_body = []
+                    for stmt in node.body:
+                        res = replacer.visit(stmt)
+                        if isinstance(res, list):
+                            new_body.extend(res)
+                        elif res:
+                            new_body.append(res)
+                    node.body = new_body
+
+        finally:
+            self.scope_stack.pop()
 
         return node
 
@@ -157,6 +205,63 @@ class InjectionTransformer(ast.NodeTransformer):
         self.generic_visit(node)
 
         return node
+
+    def visit_Call(self, node):
+        self.generic_visit(node)
+
+        target_func_name = None
+        if isinstance(node.func, ast.Name):
+            target_func_name = node.func.id
+        elif isinstance(node.func, ast.Attribute):
+            target_func_name = node.func.attr
+
+        if not target_func_name:
+            return node
+
+        current_scope = ".".join(self.scope_stack)
+
+        patches = REGISTRY.get(self.target_module_name, [])
+        has_hook = False
+
+        for patch in patches:
+            if patch.at.type.name == "INVOKE" and patch.at.target == target_func_name:
+                if patch.selector == "__body__" or patch.selector == current_scope:
+                    has_hook = True
+                    break
+
+        if not has_hook:
+            return node
+
+        print(f"[uml] Wrapping INVOKE: {target_func_name} inside {current_scope}")
+
+        new_args = [
+            node.func,
+            ast.Constant(value=self.target_module_name),
+            ast.Constant(value=target_func_name),
+            ast.Tuple(elts=node.args, ctx=ast.Load()),
+            ast.Dict(
+                keys=[ast.Constant(value=k.arg) for k in node.keywords],
+                values=[k.value for k in node.keywords],
+            ),
+            ast.Call(func=ast.Name(id="locals", ctx=ast.Load()), args=[], keywords=[]),
+        ]
+
+        wrapper_call = ast.Call(
+            func=ast.Attribute(
+                value=ast.Attribute(
+                    value=ast.Name(id="universal_modloader", ctx=ast.Load()),
+                    attr="core",
+                    ctx=ast.Load(),
+                ),
+                attr="invoke_wrapper",
+                ctx=ast.Load(),
+            ),
+            args=new_args,
+            keywords=[],
+        )
+
+        ast.copy_location(wrapper_call, node)
+        return wrapper_call
 
 
 class UniversalLoader(importlib.abc.Loader):
