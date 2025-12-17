@@ -34,16 +34,19 @@ Universal Modloader は、単なるプラグインローダーではありませ
 ## 使用例
 
 ### HEAD
+
 関数の**先頭**にコードを注入します。
 メインのロジックが走る前に、引数やローカル変数を書き換えるのに最適です。
 
 **ターゲットのコード (`main.py`)**
+
 ```python
 def take_damage(amount):
     print(f"ぐわっ！ {amount} のダメージ！")
 ```
 
 **Mod側のコード (`mods/my_mod.py` または `mods/my_mod/__init__.py`)**
+
 ```python
 @uml.Inject("main", "take_damage", at=uml.At.HEAD())
 def on_take_damage(ctx):
@@ -53,10 +56,12 @@ def on_take_damage(ctx):
 ```
 
 ### TAIL
+
 関数の**末尾**（returnの直前）にコードを注入します。
 処理完了後のログ出力や、最終的な変数の状態を確認するのに便利です。
 
 **ターゲットのコード (`main.py`)**
+
 ```python
 def heal_player():
     hp = 100
@@ -64,6 +69,7 @@ def heal_player():
 ```
 
 **Mod側のコード (`mods/my_mod.py` または `mods/my_mod/__init__.py`)**
+
 ```python
 @uml.Inject("main", "heal_player", at=uml.At.TAIL())
 def on_heal_player(ctx):
@@ -73,15 +79,18 @@ def on_heal_player(ctx):
 ```
 
 ### RETURN
+
 戻り値を強制的に書き換えます。
 
 **ターゲットのコード (`main.py`)**
+
 ```python
 def calculate_damage():
     return random.randint(5, 15)
 ```
 
 **Mod側のコード (`mods/my_mod.py` または `mods/my_mod/__init__.py`)**
+
 ```python
 import universal_modloader as uml
 
@@ -93,6 +102,40 @@ def on_calculate_damage(ctx):
 ```
 
 この場合、`0` が返されます。
+
+### INVOKE
+
+ターゲット関数の中で行われている、特定の **関数呼び出し** に割り込みます。
+関数が実行される **前** に引数を書き換えたり、実行された **後** に戻り値を書き換えたりするのに非常に強力です。
+
+**ターゲットコード (`main.py`)**
+
+```python
+def main():
+    # Modでこの "Hero" という名前を変えたい場合
+    player = Player("Hero")
+    print(f"ようこそ、 {player.name}！")
+```
+
+**Mod側のコード (`mods/my_mod.py` または `mods/my_mod/__init__.py`)**
+
+```python
+CUSTOM_NAME = "ModdedHero"
+
+# 'main' 関数の中で呼ばれている 'Player(...)' という呼び出しをフックする
+@uml.Inject("main", "main", at=uml.At.INVOKE("Player"))
+def on_create_player(ctx):
+    # ctx['args'] は Player() に渡される位置引数のリスト
+    original_name = ctx['args'][0]
+    
+    # 引数を書き換える
+    ctx['args'][0] = CUSTOM_NAME
+    print(f"[Mod] プレイヤー名を '{original_name}' から '{CUSTOM_NAME}' に変更しました")
+```
+
+デフォルトでは、`INVOKE` は関数が呼ばれる **直前 (BEFORE)** に発動し、引数の変更が可能です。
+
+`shift=uml.Shift.AFTER` を指定することで、関数が呼ばれた **直後** に発動し、戻り値を変更することもできます。
 
 ## Universal Modloaderのインストール
 
@@ -119,5 +162,5 @@ python loader.py
   - [x] `HEAD` (関数の先頭)
   - [x] `TAIL` (関数の末尾)
   - [x] `RETURN` (戻り値の書き換え)
-  - [ ] `INVOKE` (特定の関数呼び出しの前後)
+  - [x] `INVOKE` (特定の関数呼び出しの前後)
 - [ ] その他様々な追加機能

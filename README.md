@@ -34,16 +34,19 @@ This allows you to modify function logic and **access/rewrite local variables** 
 ## Usage Examples
 
 ### HEAD
+
 Injects code at the **start** of the function.
 This is useful for modifying arguments or local variables before the main logic runs.
 
 **Target Code (`main.py`)**
+
 ```python
 def take_damage(amount):
     print(f"Ouch! Took {amount} damage.")
 ```
 
 **Mod Code (`mods/my_mod.py` or `mods/my_mod/__init__.py`)**
+
 ```python
 @uml.Inject("main", "take_damage", at=uml.At.HEAD())
 def on_take_damage(ctx):
@@ -53,10 +56,12 @@ def on_take_damage(ctx):
 ```
 
 ### TAIL
+
 Injects code at the **end** of the function (before the return).
 Useful for logging or reading the final state of variables.
 
 **Target Code (`main.py`)**
+
 ```python
 def heal_player():
     hp = 100
@@ -64,6 +69,7 @@ def heal_player():
 ```
 
 **Mod Code (`mods/my_mod.py` or `mods/my_mod/__init__.py`)**
+
 ```python
 @uml.Inject("main", "heal_player", at=uml.At.TAIL())
 def on_heal_player(ctx):
@@ -73,15 +79,18 @@ def on_heal_player(ctx):
 ```
 
 ### RETURN
+
 Injects code to override the return value.
 
 **Target Code (`main.py`)**
+
 ```python
 def calculate_damage():
     return random.randint(5, 15)
 ```
 
 **Mod Code (`mods/my_mod.py` or `mods/my_mod/__init__.py`)**
+
 ```python
 import universal_modloader as uml
 
@@ -93,6 +102,39 @@ def on_calculate_damage(ctx):
 ```
 
 In this case, `__return__` forces an overwrite of the original return value, so `0` is returned instead of the random integer.
+
+### INVOKE
+
+Intercepts a specific **function call** inside the target function.
+
+This is powerful for modifying arguments passed to a function *before* it executes, or changing its return value *after* it returns.
+
+**Target Code (`main.py`)**
+
+```python
+def main():
+    # The mod wants to change this name "Hero"
+    player = Player("Hero")
+    print(f"Welcome, {player.name}!")
+```
+
+**Mod Code (`mods/my_mod.py` or `mods/my_mod/__init__.py`)**
+
+```python
+CUSTOM_NAME = "ModdedHero"
+
+# Hooks the 'Player(...)' call inside the 'main' function
+@uml.Inject("main", "main", at=uml.At.INVOKE("Player"))
+def on_create_player(ctx):
+    # ctx['args'] is a list of positional arguments passed to Player()
+    original_name = ctx['args'][0]
+    
+    # Overwrite the argument
+    ctx['args'][0] = CUSTOM_NAME
+    print(f"[Mod] Player name changed from '{original_name}' to '{CUSTOM_NAME}'")
+```
+
+By default, `INVOKE` triggers **before** the function is called, allowing argument modification. You can also use `shift=uml.Shift.AFTER` to modify the return value.
 
 ## Installation
 
@@ -120,5 +162,5 @@ You can install them using the method described above, or simply run the initial
   - [x] `HEAD` (Start of function)
   - [x] `TAIL` (End of function)
   - [x] `RETURN` (Rewrite return value)
-  - [ ] `INVOKE` (Before/After specific function calls)
+  - [x] `INVOKE` (Before/After specific function calls)
 - [ ] Various other features
