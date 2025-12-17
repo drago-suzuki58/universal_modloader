@@ -137,15 +137,42 @@ def on_create_player(ctx):
 
 `shift=uml.Shift.AFTER` を指定することで、関数が呼ばれた **直後** に発動し、戻り値を変更することもできます。
 
-## Universal Modloaderのインストール
+## インストールと使い方
 
 Modを導入したいゲームまたはアプリのフォルダに、このリポジトリの `mods` フォルダと `loader.py` をコピーしてください。
 
-その後 `main.py` の代わりに `loader.py` を実行するだけです。
+その後、Pythonで `loader.py` を実行します。
+
+### 基本的な使い方
+
+何も指定しない場合、デフォルトで `main.py` を読み込んで起動します。
 
 ```bash
 python loader.py
 ```
+
+### 高度な使い方
+
+起動するスクリプトを指定したり、ゲーム本体にコマンドライン引数を渡したりすることができます。
+
+**構文:**
+
+```bash
+python loader.py [スクリプト名] [ゲーム用引数...]
+```
+
+**例:**
+- **特定のスクリプトを起動する:**
+    ```bash
+    python loader.py my_game.py
+    ```
+    *注意: `my_game.py` を読み込んだ場合、Mod側の `@Inject` で指定するターゲット名は `"main"` ではなく `"my_game"` になります。*
+
+- **ゲームに引数を渡して起動する:**
+    ```bash
+    python loader.py main.py --debug --windowed
+    ```
+    *(`--debug --windowed` はそのまま `main.py` に渡されます)*
 
 ## examplesの動かし方
 

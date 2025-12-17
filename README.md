@@ -136,16 +136,43 @@ def on_create_player(ctx):
 
 By default, `INVOKE` triggers **before** the function is called, allowing argument modification. You can also use `shift=uml.Shift.AFTER` to modify the return value.
 
-## Installation
+## Installation & Usage
 
 To install mods for a game or application:
 
-1.  Copy the `mods` folder and `loader.py` from this repository into the target application's folder.
-2.  Run `loader.py` instead of the original entry point (e.g., `main.py`).
+1. Copy the `mods` folder and `loader.py` from this repository into the target application's folder.
+2. Run `loader.py` using Python.
+
+### Basic Usage
+
+By default, the loader attempts to launch `main.py`.
 
 ```bash
 python loader.py
 ```
+
+### Advanced Usage
+
+You can specify a different target script or pass arguments to the game itself.
+
+**Syntax:**
+
+```bash
+python loader.py [target_script] [game_arguments...]
+```
+
+**Examples:**
+- **Launch a specific script:**
+    ```bash
+    python loader.py my_game.py
+    ```
+    *Note: When loading `my_game.py`, the target module name for `@Inject` becomes `"my_game"` instead of `"main"`.*
+
+- **Pass arguments to the game:**
+    ```bash
+    python loader.py main.py --debug --windowed
+    ```
+    *(The arguments `--debug --windowed` are passed directly to `main.py`)*
 
 ## How to Run Examples
 

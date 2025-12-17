@@ -1,3 +1,4 @@
+import argparse
 import ast
 import importlib.util
 import os
@@ -6,7 +7,6 @@ import sys
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 MODS_DIR = os.path.join(ROOT_DIR, "mods")
 FRAMEWORK_DIR = os.path.join(MODS_DIR, "universal_modloader")
-TARGET_SCRIPT = "main.py"
 
 
 def load_module_from_path(module_name, file_path):
@@ -29,7 +29,22 @@ def load_module_from_path(module_name, file_path):
 
 
 def main():
-    print("--- Universal Mod Loader (Safe Mode) ---\n")
+    parser = argparse.ArgumentParser(description="Universal Mod Loader")
+    parser.add_argument(
+        "target_script",
+        nargs="?",
+        default="main.py",
+        help="The Python script to launch with mods (default: main.py)",
+    )
+
+    args, game_args = parser.parse_known_args()
+
+    target_script = args.target_script
+
+    target_module_name = os.path.splitext(os.path.basename(target_script))[0]
+
+    print("--- Universal Mod Loader (UML) ---\n")
+    print(f"[Loader] Target: {target_script} ({target_module_name})")
 
     uml_init = os.path.join(FRAMEWORK_DIR, "__init__.py")
     if not os.path.exists(uml_init):
@@ -80,35 +95,34 @@ def main():
     print(f"\n[Loader] {count} mods loaded.")
     print("-" * 40)
 
-    if not os.path.exists(TARGET_SCRIPT):
-        print(f"[Error] {TARGET_SCRIPT} not found.")
+    if not os.path.exists(target_script):
+        print(f"[Error] Target script '{target_script}' not found.")
         return
 
-    print(f"[Loader] Launching {TARGET_SCRIPT} with Injection...\n")
+    print(f"[Loader] Launching {target_script} with Injection...\n")
 
-    with open(TARGET_SCRIPT, "r", encoding="utf-8") as f:
+    with open(target_script, "r", encoding="utf-8") as f:
         source_code = f.read()
 
-    tree = ast.parse(source_code, filename=TARGET_SCRIPT)
+    tree = ast.parse(source_code, filename=target_script)
 
     from universal_modloader.core.transformer import MainTransformer  # type: ignore
 
-    transformer = MainTransformer("main")
+    transformer = MainTransformer(target_module_name)
 
     tree = transformer.visit(tree)
     ast.fix_missing_locations(tree)
 
-    sys.argv = [TARGET_SCRIPT] + sys.argv[1:]
+    sys.argv = [target_script] + game_args
 
     global_context = {
         "__name__": "__main__",
-        "__file__": TARGET_SCRIPT,
+        "__file__": target_script,
         "__doc__": None,
     }
 
     try:
-        code_obj = compile(tree, filename=TARGET_SCRIPT, mode="exec")
-
+        code_obj = compile(tree, filename=target_script, mode="exec")
         exec(code_obj, global_context)
 
     except KeyboardInterrupt:
