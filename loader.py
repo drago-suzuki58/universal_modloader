@@ -43,7 +43,7 @@ def main():
         print("[Critical] Failed to load framework.")
         return
 
-    from universal_modloader.install import install  # type: ignore
+    from universal_modloader import install  # type: ignore
 
     install()
     print("  -> Framework installed.\n")
@@ -91,9 +91,9 @@ def main():
 
     tree = ast.parse(source_code, filename=TARGET_SCRIPT)
 
-    from universal_modloader.core import InjectionTransformer  # type: ignore
+    from universal_modloader.core.transformer import MainTransformer  # type: ignore
 
-    transformer = InjectionTransformer("main")
+    transformer = MainTransformer("main")
 
     tree = transformer.visit(tree)
     ast.fix_missing_locations(tree)
