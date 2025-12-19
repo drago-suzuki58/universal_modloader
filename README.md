@@ -14,11 +14,15 @@ It parses the source code of the target application (and its libraries) at runti
 This allows you to modify function logic and **access/rewrite local variables** safely via simple decorators, without editing original source files.
 
 > [!WARNING]
-> **Alpha Version / Experimental**
-> 
-> This project is currently in the Proof of Concept (PoC) stage. APIs and internal structures are subject to change.
-> 
-> **Do not use in production environments.**
+> **Alpha Version / Experimental Technical Preview**
+>
+> This project is currently in **Alpha**. It serves as a **Proof of Concept** exploring the limits of Python's dynamic nature.
+>
+> By design, this tool utilizes **Runtime AST Injection** to bypass standard safety mechanisms (such as scope and immutability) to enable "impossible" modifications.
+>
+> **Not intended for production use.**
+>
+> This tool prioritizes **Power and Flexibility** over Safety and Stability. APIs and internal structures are subject to change without notice. Please treat this as a research tool or a modding framework, not as a standard dependency.
 
 ## Features
 
