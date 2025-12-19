@@ -185,9 +185,26 @@ You can install them using the method described above, or simply run the initial
 
 ## Roadmap / TODO
 
+### Core Features (Modding System)
+
 - [x] **Injection Points**
   - [x] `HEAD` (Start of function)
   - [x] `TAIL` (End of function)
   - [x] `RETURN` (Rewrite return value)
   - [x] `INVOKE` (Before/After specific function calls)
-- [ ] Various other features
+- [ ] **Mod Metadata (Manifest)**: Support for `__manifest__` dict or `manifest.json` to define name, version, author, and description.
+- [ ] **Mod Load Order / Priority**: Ability to define the order in which mods are applied (e.g., using integer priority or "load_after" directive).
+- [ ] **Dependency Management**: Define prerequisite mods and ensure they are loaded first.
+- [ ] **Library Management**: Automatically install required PyPI packages defined by mods (e.g., `requirements.txt` or `pyproject.toml` per mod).
+- [ ] **Conflict Detection**: Warn when multiple mods try to hijack the same function/variable in conflicting ways.
+
+### Developer Experience (DX)
+
+- [ ] **Configuration API**: A standard way for mods to save/load settings (JSON/TOML/INI) without users editing code directly.
+- [ ] **Lifecycle Hooks**: Event hooks for `on_load`, `on_ready`, `on_shutdown`, etc.
+- [ ] **Hot Reloading**: Reload mods without restarting the target application.
+
+### Stability & Safety
+
+- [ ] **Error Isolation**: Prevent a single crashing mod from bringing down the entire application (Safe Mode).
+- [ ] **Version Compatibility**: Check if a mod is compatible with the current version of the target application or loader.
