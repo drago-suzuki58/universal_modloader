@@ -1,0 +1,7 @@
+[project]
+name = "time-debugging"
+version = "0.1.0"
+description = "datetime library debugging with universal-modloader"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []

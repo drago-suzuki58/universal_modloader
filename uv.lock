@@ -4,14 +4,26 @@ requires-python = ">=3.12"
 
 [manifest]
 members = [
+    "modded-print",
     "simple-cli-rpg",
+    "time-debugging",
     "universal-modloader",
 ]
+
+[[package]]
+name = "modded-print"
+version = "0.1.0"
+source = { virtual = "examples/modded_print" }
 
 [[package]]
 name = "simple-cli-rpg"
 version = "0.1.0"
 source = { virtual = "examples/simple_cli_rpg" }
+
+[[package]]
+name = "time-debugging"
+version = "0.1.0"
+source = { virtual = "examples/time_debugging" }
 
 [[package]]
 name = "universal-modloader"

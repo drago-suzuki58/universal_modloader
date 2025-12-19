@@ -9,4 +9,6 @@ dependencies = []
 [tool.uv.workspace]
 members = [
     "examples/simple_cli_rpg",
+    "examples/time_debugging",
+    "examples/modded_print",
 ]

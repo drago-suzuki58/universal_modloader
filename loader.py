@@ -128,7 +128,7 @@ def main():
     except KeyboardInterrupt:
         print("\n[Loader] Terminated.")
     except Exception as e:
-        print(f"\n[Loader] Game Crashed: {e}")
+        print(f"\n[Loader] App Crashed: {e}")
 
 
 if __name__ == "__main__":

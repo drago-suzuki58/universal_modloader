@@ -1,0 +1,7 @@
+[project]
+name = "modded-print"
+version = "0.1.0"
+description = "Modded print example using universal-modloader"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
