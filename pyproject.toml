@@ -11,4 +11,5 @@ members = [
     "examples/simple_cli_rpg",
     "examples/time_debugging",
     "examples/modded_print",
+    "examples/fastapi_evil_security",
 ]

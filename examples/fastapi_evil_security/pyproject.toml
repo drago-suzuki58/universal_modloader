@@ -1,0 +1,14 @@
+[project]
+name = "fastapi-evil-security"
+version = "0.1.0"
+description = "Evil security example with FastAPI using universal-modloader"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "bcrypt==4.0.1",
+    "email-validator>=2.3.0",
+    "fastapi>=0.125.0",
+    "passlib[bcrypt]>=1.7.4",
+    "sqlmodel>=0.0.27",
+    "uvicorn>=0.38.0",
+]
