@@ -13,4 +13,5 @@ members = [
     "examples/modded_print",
     "examples/fastapi_evil_security",
     "examples/tkinter_pytools",
+    "examples/pandas_hack",
 ]
