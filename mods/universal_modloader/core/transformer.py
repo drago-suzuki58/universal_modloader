@@ -122,30 +122,30 @@ class MainTransformer(ast.NodeTransformer):
 
             used_vars = self.scope_analyzer.collect(node)
 
-            for patch in active_patches:
-                at_type = patch.at.type.name
+            if any(p.at.type.name == "HEAD" for p in active_patches):
+                hook_block = HookCodeGenerator.create_hook_block(
+                    self.target_module_name, selector, "HEAD", used_vars
+                )
+                for stmt in reversed(hook_block):
+                    node.body.insert(0, stmt)
 
-                if at_type in ["HEAD", "TAIL"]:
-                    hook_block = HookCodeGenerator.create_hook_block(
-                        self.target_module_name, selector, at_type, used_vars
-                    )
+            if any(p.at.type.name == "TAIL" for p in active_patches):
+                hook_block = HookCodeGenerator.create_hook_block(
+                    self.target_module_name, selector, "TAIL", used_vars
+                )
+                node.body.extend(hook_block)
 
-                    if at_type == "HEAD":
-                        for stmt in reversed(hook_block):
-                            node.body.insert(0, stmt)
-                    elif at_type == "TAIL":
-                        node.body.extend(hook_block)
+            if any(p.at.type.name == "RETURN" for p in active_patches):
+                replacer = ReturnTransformer(self.target_module_name, selector)
+                new_body = []
+                for stmt in node.body:
+                    res = replacer.visit(stmt)
+                    if isinstance(res, list):
+                        new_body.extend(res)
+                    elif res:
+                        new_body.append(res)
+                node.body = new_body
 
-                elif at_type == "RETURN":
-                    replacer = ReturnTransformer(self.target_module_name, selector)
-                    new_body = []
-                    for stmt in node.body:
-                        res = replacer.visit(stmt)
-                        if isinstance(res, list):
-                            new_body.extend(res)
-                        elif res:
-                            new_body.append(res)
-                    node.body = new_body
         finally:
             self.scope_stack.pop()
 

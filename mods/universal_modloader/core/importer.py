@@ -38,6 +38,9 @@ class ModFinder(importlib.abc.MetaPathFinder):
                 spec = finder.find_spec(fullname, path, target)
 
                 if spec and spec.loader:
+                    if isinstance(spec.loader, ModLoader):
+                        return spec
+
                     print(f"[uml] Hooking module import: {fullname}")
                     spec.loader = ModLoader(spec.loader, fullname)
                     return spec
