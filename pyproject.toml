@@ -12,4 +12,5 @@ members = [
     "examples/time_debugging",
     "examples/modded_print",
     "examples/fastapi_evil_security",
+    "examples/tkinter_pytools",
 ]
