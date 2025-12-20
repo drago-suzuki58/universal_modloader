@@ -31,7 +31,7 @@ The Mods inject a new menu bar to control the application's appearance and behav
 
 | Before (Original) | After (Modded) |
 | :---: | :---: |
-| <img src="./examples/tkinter_pytools/before.png" width="400"> | <img src="./examples/tkinter_pytools/after.png" width="400"> |
+| <img src="./before.png" width="400"> | <img src="./after.png" width="400"> |
 
 ## How to Run
 
