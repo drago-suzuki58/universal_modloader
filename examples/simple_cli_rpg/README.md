@@ -1,6 +1,6 @@
 # simple_cli_rpg
 
-[日本語](./examples/simple_cli_rpg/README.ja.md) | English
+[日本語](./README.ja.md) | English
 
 This example demonstrates how to manipulate game logic, implementing common cheat features like "God Mode" and "Speedhacks" by hooking into the game loop and state management.
 

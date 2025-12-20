@@ -1,6 +1,6 @@
 # modded_print
 
-[日本語](./examples/modded_print/README.ja.md) | English
+[日本語](./README.ja.md) | English
 
 A minimal Python script representing the absolute basics of programming.
 
@@ -25,7 +25,7 @@ The Mods demonstrate **function chaining**, where multiple independent mods sequ
   - Appends a smiley face `:)` to the end of the string.
   - Demonstrates that arguments can be modified at the tail end of the processing chain.
 
-![Rainbow Output](./examples/modded_print/screenshot.png)
+![Rainbow Output](./screenshot.png)
 
 ## How to Run
 

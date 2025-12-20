@@ -1,6 +1,6 @@
 # modded_print
 
-日本語 | [English](./examples/modded_print/README.md)
+日本語 | [English](./README.md)
 
 「Hello, World!」を出力するだけのシンプルなプログラムに対し、複数の独立したModを連鎖させ、引数や挙動を順番に書き換えていくデモンストレーションです。
 
@@ -29,7 +29,7 @@
   - 文字列の末尾にスマイリーフェイス `:)` を追加します。
   - 処理チェーンの最後尾でも引数の変更が可能であることを示しています。
 
-![Rainbow Output](./examples/modded_print/screenshot.png)
+![Rainbow Output](./screenshot.png)
 
 ## How to Run
 

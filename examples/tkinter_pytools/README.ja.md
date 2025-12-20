@@ -1,6 +1,6 @@
 # tkinter_pytools
 
-日本語 | [English](./examples/tkinter_pytools/README.md)
+日本語 | [English](./README.md)
 
 **GUIの大刷新 (GUI Overhaul)** のデモンストレーションです。レガシーなTkinterアプリケーションに対し、実行時にモダンなUI機能、テーマ適用、多言語化を注入し、硬直したツールを柔軟なものへと変貌させる方法を示します。
 
@@ -31,7 +31,7 @@ Modは新しいメニューバーを注入し、アプリケーションの外�
 
 | Before (Original) | After (Modded) |
 | :---: | :---: |
-| <img src="./examples/tkinter_pytools/before.png" width="400"> | <img src="./examples/tkinter_pytools/after.png" width="400"> |
+| <img src="./before.png" width="400"> | <img src="./after.png" width="400"> |
 
 ## How to Run
 

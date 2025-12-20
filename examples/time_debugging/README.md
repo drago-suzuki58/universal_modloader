@@ -1,6 +1,6 @@
 # time_debugging
 
-[日本語](./examples/time_debugging/README.ja.md) | English
+[日本語](./README.ja.md) | English
 
 This example demonstrates **Time-Travel Debugging**. It shows how to mock system time at runtime to test edge cases (like leap years) in time-sensitive logic, such as subscription management, without changing the OS clock.
 

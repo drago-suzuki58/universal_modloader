@@ -1,6 +1,6 @@
 # pandas_hack
 
-日本語 | [English](./examples/pandas_hack/README.md)
+日本語 | [English](./README.md)
 
 ターゲットプロジェクトに依存関係を一切追加することなく、処理の遅いデータ処理スクリプトに可観測性ツール（プログレスバー、タイマー、データ検査）を注入するデモンストレーションです。
 

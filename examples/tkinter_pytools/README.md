@@ -1,6 +1,6 @@
 # tkinter_pytools
 
-[日本語](./examples/tkinter_pytools/README.ja.md) | English
+[日本語](./README.ja.md) | English
 
 This example demonstrates a complete **GUI Overhaul**. It shows how to inject modern UI features, theming, and localization into a legacy Tkinter application at runtime, transforming a rigid tool into a flexible one.
 

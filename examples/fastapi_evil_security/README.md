@@ -1,6 +1,6 @@
 # fastapi_evil_security
 
-[日本語](./examples/fastapi_evil_security/README.ja.md) | English
+[日本語](./README.ja.md) | English
 
 This example demonstrates how **Universal Modloader (UML)** can compromise a secure, production-ready FastAPI application at runtime **without touching a single line of the source code**.
 

@@ -1,6 +1,6 @@
 # simple_cli_rpg
 
-日本語 | [English](./examples/simple_cli_rpg/README.md)
+日本語 | [English](./README.md)
 
 ゲームループや状態管理にフックすることで、「ゴッドモード（無敵）」や「スピードハック」といった一般的なチート機能を実装するデモンストレーションです。
 

@@ -1,6 +1,6 @@
 # pandas_hack
 
-[日本語](./examples/pandas_hack/README.ja.md) | English
+[日本語](./README.ja.md) | English
 
 This example demonstrates how to inject observability tools (progress bar, timer, data inspector) into a slow data processing script without adding any new dependencies to the target project.
 
