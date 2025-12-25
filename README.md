@@ -188,6 +188,52 @@ You can install them using the method described above, or simply run the initial
 - **Windows:** `initialize.bat`
 - **Linux/Mac:** `initialize.sh`
 
+## Q&A
+
+### What's the difference between `unittest.mock` and `unittest.mock`?
+
+`unittest.mock` is a module primarily used for testing purposes, temporarily replacing the behavior of functions or objects.
+
+Universal Modloader, on the other hand, is a framework for dynamically modifying code at runtime, aimed at program modding and customization.
+
+`unittest.mock` is used only for testing, while Universal Modloader is used to change the behavior of programs in real life.
+
+### When should I use Universal Modloader over `unittest.mock`?
+
+For example:
+- **When you want to change the behavior of a function in a third-party Pypi package:**  
+  Usually, changing the behavior of a library requires overriding or wrapping the function, or directly rewriting the library, but Universal Modloader allows you to change the behavior externally.
+- **When you want to distribute only the patch portion without the proprietary code:**  
+  You can distribute only the patch portion without including the proprietary code that is legally restricted from redistribution.
+- **If you want to apply multiple patches non-destructively:**  
+  Simple overwriting can result in conflicts between multiple patches, but Universal Modloader can apply multiple changes non-destructively.
+- **If you want to allow modders to freely change code without creating additional plugin APIs for your application:**  
+  Adding a plugin API to an application can require refactoring and involve extensive changes. Universal Modloader allows modders to freely change code, reducing the burden on developers.
+- **If you want to change behavior for purposes other than testing:**  
+  If you want to change code behavior for purposes other than testing (plugins, cheats, mods), Universal Modloader is more suitable.
+
+### Isn't `unittest.mock` enough?
+
+It's true that `unittest.mock` is very powerful when it comes to writing test cases. However, it is primarily intended for testing purposes.  
+If you want to change code behavior for purposes other than testing, `unittest.mock` has design limitations and can lack flexibility.
+
+Also, `unittest.mock` is intended as a temporary replacement and is not suitable for permanent changes or complex modding.
+
+Universal Modloader is a framework for dynamically modifying code at runtime, specialized for modding and customization.
+
+### Can I use it in production?
+
+You can, but it is not recommended.  
+Universal Modloader is currently in Alpha, prioritizing power and flexibility over stability and security.
+
+Also, AST injection itself exploits the dynamic nature of Python, which means unexpected behavior and security risks exist.  
+Please consider the risks similar to those of using tools such as Cheat Engine.
+
+### Which Python versions are supported?
+
+Currently, only Python 3.12 has been tested.  
+Due to the nature of ASTs, the AST structure may change when the Python version changes, so operation with other versions is not guaranteed.
+
 ## Roadmap / TODO
 
 ### Core Features (Modding System)
